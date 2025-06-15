@@ -42,8 +42,71 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+  /api/v1/example:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/size'
+      summary: Example endpoint
+      responses:
+        '200':
+          description: Example response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/JsonResponse'
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Hello, World!
+        '201':
+          $ref: '#/components/responses/JsonResponse'
+        '503':
+          $ref: '#/components/responses/HTTPResponseServiceUnavailable'
 components:
+  parameters:
+    size:
+      name: size
+      in: query
+      description: The number of items to return
+      required: false
+      schema:
+        type: integer
+        default: 10
+  responses:
+    HTTPResponseServiceUnavailable:
+      description: 'HTTP response body: Service Unavailable'
+      content:
+        text/html:
+          schema:
+            type: string
+            example: |
+              <html>
+              <head><title>503 Service Temporarily Unavailable</title></head>
+              <body>
+              <center><h1>503 Service Temporarily Unavailable</h1></center>
+              <hr><center>nginx</center>
+              </body>
+              </html>
+    JsonResponse:
+      description: 'JSON response body'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JsonResponse'
   schemas:
+    JsonResponse:
+      description: 'JSON response schema'
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
     User:
       type: object
       properties:
