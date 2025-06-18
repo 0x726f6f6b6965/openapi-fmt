@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/0x726f6f6b6965/openapi-fmt/config"
 	"github.com/0x726f6f6b6965/openapi-fmt/utils"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/spf13/cobra"
@@ -11,186 +12,157 @@ import (
 )
 
 const (
-	InputFileFlag       = "input"
-	InputFileShortFlag  = "i"
-	OutputFileFlag      = "output"
-	OutputFileShortFlag = "o"
-	ExcludesFlag        = "excludes"
-	ExcludesShortFlag   = "e"
-	PathsFlag           = "paths"
-	PathsShortFlag      = "p"
+	InputFileFlag         = "input"
+	InputFileShortFlag    = "i"
+	OutputFileFlag        = "output"
+	OutputFileShortFlag   = "o"
+	OutputFormatFlag      = "output-format"
+	OutputFormatShortFlag = "f"
+	ExcludesFlag          = "excludes"
+	ExcludesShortFlag     = "e"
+	PathsFlag             = "paths"
+	PathsShortFlag        = "p"
+	ConfigFlag            = "config"
+	ConfigShortFlag       = "c"
+	RmExtsFlag            = "remove-exts"
+	RmExtsShortFlag       = "r"
+)
 
-	CmdRemoveExtensions = "rm-exts"
-	CmdSplitByPath      = "sp"
+var (
+	configFile    string
+	inputPath     string
+	outputPath    string
+	outputFmt     string
+	excludesSlice []string
+	pathsSlice    []string
+	rmEnable      bool
 )
 
 func main() {
-	// This is a command-line tool for formatting OpenAPI documents.
-	// It is intended to be run with the `o-fmt` command.
-	// The tool will read an OpenAPI document from a specified input file,
-	// remove specified extensions, and write the formatted document to an output file.
-	// This is write by cobra
 	var rootCmd = &cobra.Command{
 		Use:   "o-fmt",
 		Short: "This is a command-line tool for formatting OpenAPI documents.",
+		RunE:  RunE,
 	}
-
-	var (
-		input    string
-		output   string
-		excludes []string
-	)
-
-	var removeCmd = &cobra.Command{
-		Use:   CmdRemoveExtensions,
-		Short: "remove extensions from OpenAPI document",
-		Run:   RunRemove,
-	}
-	removeCmd.Flags().StringVarP(&input, InputFileFlag, InputFileShortFlag, "", "the input OpenAPI file path (must be provided)")
-	removeCmd.Flags().StringVarP(&output, OutputFileFlag, OutputFileShortFlag, "", "the output OpenAPI file path (must be provided)")
-	removeCmd.Flags().StringSliceVarP(&excludes, ExcludesFlag, ExcludesShortFlag, []string{}, "the fields to exclude from the OpenAPI document (comma-separated)")
-
-	removeCmd.MarkFlagRequired(InputFileFlag)
-	removeCmd.MarkFlagRequired(OutputFileFlag)
-
-	var splitCmd = &cobra.Command{
-		Use:   CmdSplitByPath,
-		Short: "split OpenAPI document by path",
-		Run:   RunSplit,
-	}
-	splitCmd.Flags().StringVarP(&input, InputFileFlag, InputFileShortFlag, "", "the input OpenAPI file path (must be provided)")
-	splitCmd.Flags().StringVarP(&output, OutputFileFlag, OutputFileShortFlag, "", "the output OpenAPI file path (must be provided)")
-	splitCmd.Flags().StringSliceVarP(&excludes, PathsFlag, PathsShortFlag, []string{}, "the paths to split the OpenAPI document by (comma-separated)")
-
-	splitCmd.MarkFlagRequired(InputFileFlag)
-	splitCmd.MarkFlagRequired(OutputFileFlag)
-	splitCmd.MarkFlagRequired(PathsFlag)
-
-	rootCmd.AddCommand(removeCmd)
-	rootCmd.AddCommand(splitCmd)
+	rootCmd.PersistentFlags().StringVarP(&configFile, ConfigFlag, ConfigShortFlag, "", "path to the config file (e.g. config.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&inputPath, InputFileFlag, InputFileShortFlag, "", "path to the input OpenAPI file")
+	rootCmd.PersistentFlags().StringVarP(&outputPath, OutputFileFlag, OutputFileShortFlag, "", "path to the output OpenAPI file")
+	rootCmd.PersistentFlags().StringVarP(&outputFmt, OutputFormatFlag, OutputFormatShortFlag, "yaml", "format of the output file (yaml or json)")
+	rootCmd.PersistentFlags().StringSliceVarP(&excludesSlice, ExcludesFlag, ExcludesShortFlag, []string{}, "extensions to exclude from the output file")
+	rootCmd.PersistentFlags().StringSliceVarP(&pathsSlice, PathsFlag, PathsShortFlag, []string{}, "paths to split the OpenAPI document by")
+	rootCmd.PersistentFlags().BoolVarP(&rmEnable, RmExtsFlag, RmExtsShortFlag, false, "enable removing extensions from the OpenAPI document")
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-func RunRemove(cmd *cobra.Command, args []string) {
-	input, err := cmd.Flags().GetString(InputFileFlag)
-	if err != nil {
-		cmd.PrintErrf("Error getting input file flag: %v\n", err)
-		return
+func RunE(cmd *cobra.Command, args []string) error {
+
+	var cfg *config.Config
+	if configFile != "" {
+		var err error
+		cfg, err = config.LoadConfig(configFile)
+		if err != nil {
+			return fmt.Errorf("Error loading config file '%s': %w", configFile, err)
+		}
+
+		if cfg.Input.Path != "" {
+			inputPath = cfg.Input.Path
+		}
+		if cfg.Output.Path != "" {
+			outputPath = cfg.Output.Path
+		}
+		if cfg.Output.Format != "" {
+			outputFmt = cfg.Output.Format
+		}
+		if cfg.RmExts.Enable {
+			rmEnable = cfg.RmExts.Enable
+			if len(cfg.RmExts.Excludes) > 0 {
+				excludesSlice = cfg.RmExts.Excludes
+			}
+		}
+		if cfg.Sp.Enable && len(cfg.Sp.Paths) > 0 {
+			pathsSlice = cfg.Sp.Paths
+		}
 	}
-	output, err := cmd.Flags().GetString(OutputFileFlag)
-	if err != nil {
-		cmd.PrintErrf("Error getting output file flag: %v\n", err)
-		return
+
+	if inputPath == "" {
+		return fmt.Errorf("Error: input file path must be provided via flag or config file")
 	}
-	excludes, err := cmd.Flags().GetStringSlice(ExcludesFlag)
-	if err != nil {
-		cmd.PrintErrf("Error getting excludes flag: %v\n", err)
-		return
+	if outputPath == "" {
+		return fmt.Errorf("Error: output file path must be provided via flag or config file")
 	}
-	// get input file path
-	f, err := os.ReadFile(input)
+	if outputFmt != "yaml" && outputFmt != "json" {
+		return fmt.Errorf("Error: output format must be either 'yaml' or 'json'")
+	}
+	if len(excludesSlice) != 0 {
+		rmEnable = true
+	}
+
+	var (
+		source *openapi3.T
+		err    error
+	)
+
+	f, err := os.ReadFile(inputPath)
 	if err != nil {
-		cmd.PrintErrf("Error reading input file: %s \nerror: %v\n", input, err)
-		return
+		return fmt.Errorf("Error reading input file '%s': %w", inputPath, err)
 	}
 	loader := openapi3.NewLoader()
 	doc, err := loader.LoadFromData(f)
 	if err != nil {
-		cmd.PrintErrf("Error loading OpenAPI document: %v\n", err)
-		return
+		return fmt.Errorf("Error loading OpenAPI document from '%s': %w", inputPath, err)
 	}
-	// get exclude
-	keep := map[string]struct{}{}
-	for _, exclude := range excludes {
-		if exclude == "" {
-			continue
+
+	if len(pathsSlice) > 0 {
+		targets := map[string]struct{}{}
+		for _, path := range pathsSlice {
+			if path == "" {
+				continue
+			}
+			targets[path] = struct{}{}
 		}
-		// add the exclude to the keep map
-		keep[exclude] = struct{}{}
-	}
 
-	// remove extensions
-	utils.RemoveExtensions(doc, keep)
-	// marshal the document to YAML
-	out, err := doc.MarshalYAML()
-	if err != nil {
-		cmd.PrintErrf("Error marshalling OpenAPI document: %v\n", err)
-		return
-	}
-	data, err := yaml.Marshal(out)
-	if err != nil {
-		cmd.PrintErrf("Error marshalling OpenAPI document to YAML: %v\n", err)
-		return
-	}
-	// write the formatted document to the output file
-	if err := os.WriteFile(output, data, 0644); err != nil {
-		cmd.PrintErrf("Error writing output file: %v\n", err)
-		return
-	}
-	cmd.Printf("Formatted OpenAPI document written to %s\n", output)
-}
-
-func RunSplit(cmd *cobra.Command, args []string) {
-	input, err := cmd.Flags().GetString(InputFileFlag)
-	if err != nil {
-		cmd.PrintErrf("Error getting input file flag: %v\n", err)
-		return
-	}
-	output, err := cmd.Flags().GetString(OutputFileFlag)
-	if err != nil {
-		cmd.PrintErrf("Error getting output file flag: %v\n", err)
-		return
-	}
-	// get input file path
-	f, err := os.ReadFile(input)
-	if err != nil {
-		cmd.PrintErrf("Error reading input file: %s \nerror: %v\n", input, err)
-		return
-	}
-
-	paths, err := cmd.Flags().GetStringSlice(PathsFlag)
-	if err != nil {
-		cmd.PrintErrf("Error getting paths flag: %v\n", err)
-		return
-	}
-	loader := openapi3.NewLoader()
-	doc, err := loader.LoadFromData(f)
-	if err != nil {
-		cmd.PrintErrf("Error loading OpenAPI document: %v\n", err)
-		return
-	}
-	targets := map[string]struct{}{}
-	for _, path := range paths {
-		if path == "" {
-			continue
+		source, err = utils.SplitByPath(doc, targets)
+		if err != nil {
+			return fmt.Errorf("Error splitting OpenAPI document by path: %w", err)
 		}
-		targets[path] = struct{}{}
+	} else {
+		source = doc
 	}
-	// split by path
-	splitDoc, err := utils.SplitByPath(doc, targets)
-	if err != nil {
-		cmd.PrintErrf("Error splitting OpenAPI document by path: %v\n", err)
-		return
+
+	if rmEnable {
+		// remove extensions
+		keep := map[string]struct{}{}
+		for _, exclude := range excludesSlice {
+			if exclude == "" {
+				continue
+			}
+			keep[exclude] = struct{}{}
+		}
+		utils.RemoveExtensions(source, keep)
 	}
-	// marshal the document to YAML
-	out, err := splitDoc.MarshalYAML()
-	if err != nil {
-		cmd.PrintErrf("Error marshalling OpenAPI document: %v\n", err)
-		return
+	var data []byte
+	if outputFmt == "yaml" {
+		out, err := source.MarshalYAML()
+		if err != nil {
+			return fmt.Errorf("Error marshalling OpenAPI document: %w", err)
+		}
+		data, err = yaml.Marshal(out)
+		if err != nil {
+			return fmt.Errorf("Error marshalling OpenAPI document to YAML: %w", err)
+		}
+	} else if outputFmt == "json" {
+		data, err = source.MarshalJSON()
+		if err != nil {
+			return fmt.Errorf("Error marshalling OpenAPI document to JSON: %w", err)
+		}
 	}
-	data, err := yaml.Marshal(out)
-	if err != nil {
-		cmd.PrintErrf("Error marshalling OpenAPI document to YAML: %v\n", err)
-		return
+	if err := os.WriteFile(outputPath, data, 0644); err != nil {
+		return fmt.Errorf("Error writing output file '%s': %w", outputPath, err)
 	}
-	// write the formatted document to the output file
-	if err := os.WriteFile(output, data, 0644); err != nil {
-		cmd.PrintErrf("Error writing output file: %v\n", err)
-		return
-	}
-	cmd.Printf("Formatted OpenAPI document written to %s\n", output)
+
+	return nil // Success
 }

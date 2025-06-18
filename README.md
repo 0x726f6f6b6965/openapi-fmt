@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/0x726f6f6b6965/openapi-fmt)](https://goreportcard.com/report/github.com/0x726f6f6b6965/openapi-fmt)
 [![codecov](https://codecov.io/gh/0x726f6f6b6965/openapi-fmt/branch/main/graph/badge.svg)](https://codecov.io/gh/0x726f6f6b6965/openapi-fmt)
 
-`openapi-fmt` is a command-line tool for formatting OpenAPI documents. It supports removing custom extension fields from OpenAPI files.
+`openapi-fmt` is a command-line tool for formatting OpenAPI documents. It supports removing custom extension fields from OpenAPI files and supports extracting OpenAPI from specific paths.
 
 ## Features
 
@@ -38,7 +38,7 @@ From there, you can use `go:generate`
 ## Usage
 
 ```bash
-o-fmt rm-exts -i <input-file> -o <output-file> -e <exclude1>,<exclude2>
+o-fmt -i <input-file> -o <output-file> -e <exclude1>,<exclude2>
 ```
 
 - `-i, --input`: Path to the input OpenAPI file (required)
@@ -50,7 +50,7 @@ o-fmt rm-exts -i <input-file> -o <output-file> -e <exclude1>,<exclude2>
 Remove all extensions except `x-keep-me`:
 
 ```bash
-o-fmt rm-exts -i api.yaml -o api.cleaned.yaml -e x-keep-me
+o-fmt -i api.yaml -o api.cleaned.yaml -e x-keep-me
 ```
 
 ## Contributing

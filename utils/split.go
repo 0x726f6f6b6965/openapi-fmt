@@ -8,7 +8,7 @@ import (
 
 func SplitByPath(doc *openapi3.T, targets map[string]struct{}) (*openapi3.T, error) {
 	if doc == nil {
-		return nil, nil
+		return nil, ErrOpenAPINotFound
 	}
 
 	// Create a new OpenAPI document to hold the split paths
@@ -56,6 +56,9 @@ func SplitByPath(doc *openapi3.T, targets map[string]struct{}) (*openapi3.T, err
 
 		}
 
+	}
+	if len(splitDoc.Paths.Map()) == 0 {
+		return nil, ErrOpenAPIPathNotFound
 	}
 	return splitDoc, nil
 }

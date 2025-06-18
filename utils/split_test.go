@@ -39,3 +39,23 @@ func (suite *UtilsTestSuite) TestSplitByPath() {
 		}
 	}
 }
+
+func (suite *UtilsTestSuite) TestSplitByPathNotFound() {
+	_, err := utils.SplitByPath(suite.Doc, map[string]struct{}{
+		"/api/v1/nonexistent": {}})
+	if err == nil {
+		suite.T().Error("Expected an error when splitting by a non-existent path, but got nil")
+	}
+	if err != utils.ErrOpenAPIPathNotFound {
+		suite.T().Errorf("Expected error %v, but got %v", utils.ErrOpenAPIPathNotFound, err)
+	}
+}
+func (suite *UtilsTestSuite) TestSplitByPathEmpty() {
+	_, err := utils.SplitByPath(suite.Doc, map[string]struct{}{})
+	if err == nil {
+		suite.T().Errorf("Expected an error when splitting by an empty path map, but got nil")
+	}
+	if err != utils.ErrOpenAPIPathNotFound {
+		suite.T().Errorf("Expected error %v, but got %v", utils.ErrOpenAPIPathNotFound, err)
+	}
+}
