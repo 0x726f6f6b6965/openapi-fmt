@@ -1,0 +1,38 @@
+openapi: 3.0.0
+info:
+  title: Test API for RemoveExtensions
+  version: 1.0.0
+x-global-ext: "should be removed"
+paths:
+  /test:
+    get:
+      summary: Test endpoint
+      x-go-type: "TestType" # This should be kept if excluded
+      x-42c-sample: "SampleValue" # This should be removed
+      x-another-to-remove: "RemoveMe"
+      responses:
+        '200':
+          description: Successful response
+          x-resp-ext: "ResponseExtension" # Should be removed
+          content:
+            application/json:
+              schema:
+                type: object
+                x-schema-ext: "SchemaExtension" # Should be removed
+                properties:
+                  message:
+                    type: string
+                    x-prop-ext: "PropertyExtension" # Should be removed
+                    x-go-type: "MessageType" # Should be kept if x-go-type is excluded
+components:
+  schemas:
+    TestType:
+      type: object
+      x-comp-schema-ext: "ComponentSchemaExtension" # Should be removed
+      properties:
+        id:
+          type: string
+          x-go-type: "IDType" # Should be kept if x-go-type is excluded
+    OtherSchema:
+      type: object
+      x-other-schema-ext: "toBeRemoved"
