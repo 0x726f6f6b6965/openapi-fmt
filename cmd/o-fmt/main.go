@@ -49,7 +49,7 @@ func main() {
 	rootCmd.PersistentFlags().StringVarP(&outputPath, OutputFileFlag, OutputFileShortFlag, "", "path to the output OpenAPI file")
 	rootCmd.PersistentFlags().StringVarP(&outputFmt, OutputFormatFlag, OutputFormatShortFlag, "yaml", "format of the output file (yaml or json)")
 	rootCmd.PersistentFlags().StringSliceVarP(&excludesSlice, ExcludesFlag, ExcludesShortFlag, []string{}, "extensions to exclude from the output file")
-	rootCmd.PersistentFlags().StringSliceVarP(&pathsSlice, PathsFlag, PathsShortFlag, []string{}, "paths to split the OpenAPI document by")
+	rootCmd.PersistentFlags().StringSliceVarP(&pathsSlice, PathsFlag, PathsShortFlag, []string{}, "paths to split the OpenAPI document")
 	rootCmd.PersistentFlags().BoolVarP(&rmEnable, RmExtsFlag, RmExtsShortFlag, false, "enable removing extensions from the OpenAPI document")
 
 	if err := rootCmd.Execute(); err != nil {
