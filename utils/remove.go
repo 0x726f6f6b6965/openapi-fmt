@@ -22,7 +22,7 @@ func RemoveExtensions(doc *openapi3.T, exclude map[string]struct{}) {
 		pathItem.Extensions = nil
 		for _, operation := range pathItem.Operations() {
 			// Remove extensions from each operation
-			operation.Extensions = nil
+			removeExt(operation.Extensions, exclude) // Corrected: use removeExt helper
 
 			// Remove parameters from the operation
 			for _, param := range operation.Parameters {

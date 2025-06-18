@@ -68,34 +68,45 @@ func collectPrameterComponents(splitDoc *openapi3.T, doc *openapi3.T, param *ope
 		return
 	}
 	if param.Ref != "" {
-		// extract the reference name
 		typ, key := ExtractReferenceName(param.Ref)
 		switch typ {
 		case "parameters":
-			// If the reference is to a parameter, we need to collect it
-			// from the main document's components
-			next := doc.Components.Parameters[key]
-			collectPrameterComponents(splitDoc, doc, next, param.Ref)
+			if _, exists := splitDoc.Components.Parameters[key]; exists {
+				return
+			}
+			sourceComponent := doc.Components.Parameters[key]
+			if sourceComponent == nil { return }
+
+			if splitDoc.Components.Parameters == nil {
+				splitDoc.Components.Parameters = make(openapi3.ParametersMap)
+			}
+			splitDoc.Components.Parameters[key] = sourceComponent
+			collectPrameterComponents(splitDoc, doc, sourceComponent, param.Ref) // Recurse with source component and original ref
 		case "schemas":
-			// If the reference is to a schema, we need to collect it
-			// from the main document's components
-			next := doc.Components.Schemas[key]
-			collectSchemaComponents(splitDoc, doc, next, param.Ref)
+			sourceComponent := doc.Components.Schemas[key]
+			if sourceComponent == nil { return }
+			collectSchemaComponents(splitDoc, doc, sourceComponent) // Call new signature
 		default:
 		}
 		return
 	}
+
+	// Logic for handling resolved parameter 'param' (param.Ref is empty)
+	// 'ref' is the original reference string that led to this 'param' value.
 	if ref != "" {
-		// If the parameter is not a reference, we can add it directly
-		typ, key := ExtractReferenceName(ref)
-		if typ != "parameters" {
-			// If the reference is not to a parameter, we should not add it
-			return
+		originalRefType, originalRefKey := ExtractReferenceName(ref)
+		if originalRefType == "parameters" {
+			if _, exists := splitDoc.Components.Parameters[originalRefKey]; !exists {
+				if splitDoc.Components.Parameters == nil {
+					splitDoc.Components.Parameters = make(openapi3.ParametersMap)
+				}
+				splitDoc.Components.Parameters[originalRefKey] = param // Add the fully resolved parameter
+			}
 		}
-		if splitDoc.Components.Parameters == nil {
-			splitDoc.Components.Parameters = make(openapi3.ParametersMap)
-		}
-		splitDoc.Components.Parameters[key] = param
+	}
+	// If param.Value is not nil and contains an inline schema, collect it.
+	if param.Value != nil && param.Value.Schema != nil {
+		collectSchemaComponents(splitDoc, doc, param.Value.Schema)
 	}
 }
 
@@ -104,44 +115,45 @@ func collectRequestBodyComponents(splitDoc *openapi3.T, doc *openapi3.T, request
 		return
 	}
 	if requestBody.Ref != "" {
-		// extract the reference name
 		typ, key := ExtractReferenceName(requestBody.Ref)
 		switch typ {
 		case "requestBodies":
-			// If the reference is to a request body, we need to collect it
-			// from the main document's components
-			next := doc.Components.RequestBodies[key]
-			collectRequestBodyComponents(splitDoc, doc, next, requestBody.Ref)
+			if _, exists := splitDoc.Components.RequestBodies[key]; exists {
+				return
+			}
+			sourceComponent := doc.Components.RequestBodies[key]
+			if sourceComponent == nil { return }
+
+			if splitDoc.Components.RequestBodies == nil {
+				splitDoc.Components.RequestBodies = make(openapi3.RequestBodies)
+			}
+			splitDoc.Components.RequestBodies[key] = sourceComponent
+			collectRequestBodyComponents(splitDoc, doc, sourceComponent, requestBody.Ref)
 		case "schemas":
-			// If the reference is to a schema, we need to collect it
-			// from the main document's components
-			next := doc.Components.Schemas[key]
-			collectSchemaComponents(splitDoc, doc, next, requestBody.Ref)
+			sourceComponent := doc.Components.Schemas[key]
+			if sourceComponent == nil { return }
+			collectSchemaComponents(splitDoc, doc, sourceComponent)
 		default:
 		}
 		return
 	}
 
 	if ref != "" {
-		// If the request body is not a reference, we can add it directly
-		// extract the reference name
-		typ, key := ExtractReferenceName(ref)
-		if typ != "requestBodies" {
-			// If the reference is not to a request body, we should not add it
-			return
+		originalRefType, originalRefKey := ExtractReferenceName(ref)
+		if originalRefType == "requestBodies" {
+			if _, exists := splitDoc.Components.RequestBodies[originalRefKey]; !exists {
+				if splitDoc.Components.RequestBodies == nil {
+					splitDoc.Components.RequestBodies = make(openapi3.RequestBodies)
+				}
+				splitDoc.Components.RequestBodies[originalRefKey] = requestBody
+			}
 		}
-		// Add the request body to the split document's components
-		if splitDoc.Components.RequestBodies == nil {
-			splitDoc.Components.RequestBodies = make(openapi3.RequestBodies)
-		}
-		splitDoc.Components.RequestBodies[key] = requestBody
-		return
 	}
+
 	if requestBody.Value != nil {
 		for _, mediaItem := range requestBody.Value.Content {
 			if mediaItem.Schema != nil {
-				// Collect schema components from the media type schema
-				collectSchemaComponents(splitDoc, doc, mediaItem.Schema, "")
+				collectSchemaComponents(splitDoc, doc, mediaItem.Schema)
 			}
 		}
 	}
@@ -155,85 +167,115 @@ func collectResponseComponents(splitDoc *openapi3.T, doc *openapi3.T, response *
 		typ, key := ExtractReferenceName(response.Ref)
 		switch typ {
 		case "responses":
-			next := doc.Components.Responses[key]
-			collectResponseComponents(splitDoc, doc, next, response.Ref)
+			if _, exists := splitDoc.Components.Responses[key]; exists {
+				return
+			}
+			sourceComponent := doc.Components.Responses[key]
+			if sourceComponent == nil { return }
+
+			if splitDoc.Components.Responses == nil {
+				splitDoc.Components.Responses = make(openapi3.ResponseBodies)
+			}
+			splitDoc.Components.Responses[key] = sourceComponent
+			collectResponseComponents(splitDoc, doc, sourceComponent, response.Ref)
 		case "schemas":
-			next := doc.Components.Schemas[key]
-			collectSchemaComponents(splitDoc, doc, next, response.Ref)
+			sourceComponent := doc.Components.Schemas[key]
+			if sourceComponent == nil { return }
+			collectSchemaComponents(splitDoc, doc, sourceComponent)
 		default:
 		}
 		return
 	}
 
 	if ref != "" {
-		// If the response is not a reference, we can add it directly
-		typ, key := ExtractReferenceName(ref)
-		if typ != "responses" {
-			return
-		}
-		if splitDoc.Components.Responses == nil {
-			splitDoc.Components.Responses = make(openapi3.ResponseBodies)
-		}
-		// Add the response to the split document's components
-		splitDoc.Components.Responses[key] = response
-		return
-	}
-	if response.Value != nil {
-		for _, mediaItem := range response.Value.Content {
-			if mediaItem.Schema != nil {
-				// Collect schema components from the media type schema
-				collectSchemaComponents(splitDoc, doc, mediaItem.Schema, "")
+		originalRefType, originalRefKey := ExtractReferenceName(ref)
+		if originalRefType == "responses" {
+			if _, exists := splitDoc.Components.Responses[originalRefKey]; !exists {
+				if splitDoc.Components.Responses == nil {
+					splitDoc.Components.Responses = make(openapi3.ResponseBodies)
+				}
+				splitDoc.Components.Responses[originalRefKey] = response
 			}
 		}
 	}
 
+	if response.Value != nil {
+		for _, mediaItem := range response.Value.Content {
+			if mediaItem.Schema != nil {
+				collectSchemaComponents(splitDoc, doc, mediaItem.Schema)
+			}
+		}
+	}
 }
 
-func collectSchemaComponents(splitDoc *openapi3.T, doc *openapi3.T, schema *openapi3.SchemaRef, ref string) {
-	if schema == nil {
+func collectSchemaComponents(splitDoc *openapi3.T, doc *openapi3.T, schemaRefToProcess *openapi3.SchemaRef) {
+	if schemaRefToProcess == nil {
 		return
 	}
-	if schema.Ref != "" {
-		_, key := ExtractReferenceName(schema.Ref)
-		next := doc.Components.Schemas[key]
-		collectSchemaComponents(splitDoc, doc, next, schema.Ref)
-		return
-	}
-	if ref != "" {
-		typ, key := ExtractReferenceName(ref)
-		if typ != "schemas" {
-			return
+
+	var currentSchemaValue *openapi3.Schema
+
+	if schemaRefToProcess.Ref != "" { // It's a reference e.g. "#/components/schemas/MySchema"
+		refType, refKey := ExtractReferenceName(schemaRefToProcess.Ref)
+		if refType != "schemas" {
+			return // Not a schema component reference
 		}
-		if splitDoc.Components.Schemas == nil {
-			splitDoc.Components.Schemas = make(openapi3.Schemas)
+
+		// If already added, get its Value to process children. Avoids re-adding/overwriting.
+		if existingRef, exists := splitDoc.Components.Schemas[refKey]; exists {
+			currentSchemaValue = existingRef.Value
+		} else {
+			sourceComponent := doc.Components.Schemas[refKey]
+			if sourceComponent == nil {
+				return // Source component not found
+			}
+
+			if splitDoc.Components.Schemas == nil {
+				splitDoc.Components.Schemas = make(openapi3.Schemas)
+			}
+			splitDoc.Components.Schemas[refKey] = sourceComponent // Add the component (SchemaRef) from source doc
+			currentSchemaValue = sourceComponent.Value // Process the value of this newly added component
 		}
-		splitDoc.Components.Schemas[key] = schema
+	} else {
+		// It's an inline schema or a pre-resolved schema value (e.g. from a previous step)
+		currentSchemaValue = schemaRefToProcess.Value
 	}
-	// Collect schema components from the schema's properties
-	for _, property := range schema.Value.Properties {
-		collectSchemaComponents(splitDoc, doc, property, "")
+
+	if currentSchemaValue == nil {
+		return // No actual schema content to process
 	}
-	// Collect schema components from the schema's items
-	if schema.Value.Items != nil {
-		collectSchemaComponents(splitDoc, doc, schema.Value.Items, "")
+
+	// Process children of currentSchemaValue
+	for _, propertySchemaRef := range currentSchemaValue.Properties {
+		collectSchemaComponents(splitDoc, doc, propertySchemaRef)
 	}
-	// Collect schema components from the schema's allOf, oneOf, anyOf
-	for _, ref := range schema.Value.AllOf {
-		collectSchemaComponents(splitDoc, doc, ref, "")
+	if currentSchemaValue.Items != nil {
+		collectSchemaComponents(splitDoc, doc, currentSchemaValue.Items)
 	}
-	for _, ref := range schema.Value.OneOf {
-		collectSchemaComponents(splitDoc, doc, ref, "")
+	for _, allOfSchemaRef := range currentSchemaValue.AllOf {
+		collectSchemaComponents(splitDoc, doc, allOfSchemaRef)
 	}
-	for _, ref := range schema.Value.AnyOf {
-		collectSchemaComponents(splitDoc, doc, ref, "")
+	for _, oneOfSchemaRef := range currentSchemaValue.OneOf {
+		collectSchemaComponents(splitDoc, doc, oneOfSchemaRef)
+	}
+	for _, anyOfSchemaRef := range currentSchemaValue.AnyOf {
+		collectSchemaComponents(splitDoc, doc, anyOfSchemaRef)
 	}
 }
 
 func ExtractReferenceName(ref string) (string, string) {
-	// Split the reference string by '/' and take the last part
-	parts := strings.Split(ref, "/")
-	if len(parts) == 0 {
+	if ref == "" {
 		return "", ""
 	}
+	// Split the reference string by '/'
+	parts := strings.Split(ref, "/")
+	// We need at least two parts (e.g., "schemas/User" or "#/components/schemas/User")
+	// For "#/components/schemas/User", parts are ["#", "components", "schemas", "User"] (len 4)
+	// For "schemas/User", parts are ["schemas", "User"] (len 2)
+	// For "User" (invalid short ref), parts are ["User"] (len 1)
+	if len(parts) < 2 {
+		return "", "" // Or handle as an error, or return the single part as key if appropriate
+	}
+	// The component type is the second to last part, and the key is the last part.
 	return parts[len(parts)-2], parts[len(parts)-1]
 }

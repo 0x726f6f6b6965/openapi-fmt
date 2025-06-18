@@ -1,0 +1,176 @@
+openapi: 3.0.0
+info:
+  title: Comprehensive Test API
+  version: 2.0.0
+paths:
+  /complex-path:
+    get:
+      summary: Endpoint with various component references
+      parameters:
+        - $ref: '#/components/parameters/CommonParam'
+        - name: inlineQueryParam
+          in: query
+          schema:
+            type: string
+      requestBody:
+        $ref: '#/components/requestBodies/ComplexBody'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+        '400':
+          description: Bad request with inline schema
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorCode:
+                    type: string
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+  /simple-path: # Path that exists but does not reference any components
+    get:
+      summary: Simple endpoint with no component references
+      responses:
+        '204':
+          description: No content
+  /path-with-allof-schema:
+    post:
+      summary: Endpoint referencing a schema with allOf
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AllOfSchema'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllOfSchema'
+
+components:
+  schemas:
+    BaseSchema:
+      type: object
+      properties:
+        id:
+          type: string
+          example: baseId
+    NestedSchema: # SchemaB (referred by another schema)
+      type: object
+      properties:
+        name:
+          type: string
+          example: Nested Name
+    MainSchema: # SchemaA (refers to NestedSchema/SchemaB)
+      type: object
+      properties:
+        mainProperty:
+          type: string
+        nested:
+          $ref: '#/components/schemas/NestedSchema'
+    ReferencedInResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: OK
+    AllOfSchema:
+      allOf:
+        - $ref: '#/components/schemas/BaseSchema'
+        - type: object
+          properties:
+            additionalProperty:
+              type: string
+              example: "Additional Info"
+    OneOfSchema: # Not directly used by a path yet, but available
+      oneOf:
+        - $ref: '#/components/schemas/BaseSchema'
+        - $ref: '#/components/schemas/NestedSchema'
+    AnyOfSchema: # Not directly used by a path yet, but available
+      anyOf:
+        - $ref: '#/components/schemas/BaseSchema'
+        - $ref: '#/components/schemas/MainSchema'
+    UnusedSchema:
+      type: object
+      properties:
+        data:
+          type: string
+
+  parameters:
+    CommonParam:
+      name: commonParam
+      in: query
+      description: A common query parameter
+      required: false
+      schema:
+        type: integer
+    UnusedParam:
+      name: unusedParam
+      in: header
+      schema:
+        type: string
+
+  requestBodies:
+    ComplexBody:
+      description: A complex request body
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MainSchema' # References MainSchema -> NestedSchema
+    UnusedBody:
+      description: An unused request body
+      content:
+        application/json:
+          schema:
+            type: string
+
+  responses:
+    SuccessResponse:
+      description: A successful response using a referenced schema
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReferencedInResponse'
+    ErrorResponse: # Referenced by /complex-path
+      description: Standard error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "An error occurred"
+    UnusedResponse:
+      description: An unused response
+      content:
+        application/json:
+          schema:
+            type: string
+
+  headers:
+    RateLimit:
+      description: Rate limit header
+      schema:
+        type: integer
+    UnusedHeader:
+      description: An unused header
+      schema:
+        type: string
+
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: http://example.com/oauth/token
+          scopes: {}
+    UnusedScheme:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+x-global-extension: "should be removed by default"
