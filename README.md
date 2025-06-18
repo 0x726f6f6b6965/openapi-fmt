@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/0x726f6f6b6965/openapi-fmt)](https://goreportcard.com/report/github.com/0x726f6f6b6965/openapi-fmt)
 [![codecov](https://codecov.io/gh/0x726f6f6b6965/openapi-fmt/branch/main/graph/badge.svg)](https://codecov.io/gh/0x726f6f6b6965/openapi-fmt)
 
-`openapi-fmt` is a command-line tool for formatting OpenAPI documents. It supports removing custom extension fields from OpenAPI files.
+`openapi-fmt` is a command-line tool for formatting OpenAPI documents. It supports removing custom extension fields from OpenAPI files and supports extracting OpenAPI from specific paths.
 
 ## Features
 
@@ -38,19 +38,24 @@ From there, you can use `go:generate`
 ## Usage
 
 ```bash
-o-fmt rm-exts -i <input-file> -o <output-file> -e <exclude1>,<exclude2>
+o-fmt -c <config-file> -i <input-file> -o <output-file> -f <json/yaml> -e <exclude1>,<exclude2> -p <path1>,<path2> -r
 ```
 
-- `-i, --input`: Path to the input OpenAPI file (required)
-- `-o, --output`: Path to the output OpenAPI file (required)
-- `-e, --excludes`: Extension fields to keep (comma-separated, optional)
+- `-c, config`: Path to the config file (e.g. config.yaml)
+- `-i, --input`: Path to the input OpenAPI file
+- `-o, --output`: Path to the output OpenAPI file
+- `-f, --output-format`: Format of the output file (yaml or json, default yaml)
+- `-e, --excludes`: Extension fields to keep. If the fields is not empty, no need to enable removing extensions again. (comma-separated, optional)
+- `-p, --paths`: Paths to split the OpenAPI document (comma-separated, optional)
+- `-r, --remove-exts`: Enable removing extensions from the OpenAPI document ( optional)
+
 
 ### Example
 
 Remove all extensions except `x-keep-me`:
 
 ```bash
-o-fmt rm-exts -i api.yaml -o api.cleaned.yaml -e x-keep-me
+o-fmt -i api.yaml -o api.cleaned.yaml -e x-keep-me
 ```
 
 ## Contributing
