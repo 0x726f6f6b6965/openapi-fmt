@@ -62,7 +62,7 @@ func runTestMain(t *testing.T, configFilePathVal, inputPathVal, outputPathVal, o
 		// This assertion is in the helper, so it runs for every test that might use "input_ext.yaml".
 		// However, we're interested in the state specifically for TestRunE_RemoveExtensions's call.
 		expectedExcludes := []string{"x-go-type"} // Corrected to x-go-type
-		currentExcludes := excludesSlice // The global that was just set
+		currentExcludes := excludesSlice          // The global that was just set
 		assert.Equal(t, expectedExcludes, currentExcludes, "HELPER CHECK: excludesSlice not set correctly before RunE for input_ext.yaml")
 
 		// For TestRunE_RemoveExtensions, rmEnableVal is now true.
@@ -74,7 +74,6 @@ func runTestMain(t *testing.T, configFilePathVal, inputPathVal, outputPathVal, o
 			assert.True(t, rmEnable, "HELPER CHECK: global rmEnable should be true before RunE for input_ext.yaml if rmEnableVal was true")
 		}
 	}
-
 
 	// We pass nil for cmd and empty slice for args as RunE doesn't use them directly,
 	// but relies on the global flag variables.
@@ -104,13 +103,13 @@ func TestRunE_SuccessYAML(t *testing.T) {
 	assert.NoError(t, err, "Failed to write temp input file")
 
 	runErr := runTestMain(t,
-		"",            // configFile
-		inputFilePath, // inputPath
+		"",             // configFile
+		inputFilePath,  // inputPath
 		outputFilePath, // outputPath
-		"yaml",        // outputFmt
-		nil,           // excludesSlice
-		nil,           // pathsSlice
-		false,         // rmEnable
+		"yaml",         // outputFmt
+		nil,            // excludesSlice
+		nil,            // pathsSlice
+		false,          // rmEnable
 	)
 	assert.NoError(t, runErr, "RunE returned an error")
 
@@ -261,9 +260,9 @@ output:
 
 	runErr := runTestMain(t,
 		cfgFilePath,
-		"",             // inputPath (use from config)
-		"",             // outputPath (use from config)
-		"json",         // outputFmt (this flag should be used as config doesn't specify it)
+		"",     // inputPath (use from config)
+		"",     // outputPath (use from config)
+		"json", // outputFmt (this flag should be used as config doesn't specify it)
 		nil,
 		nil,
 		false,
@@ -300,12 +299,12 @@ rm-exts:
 
 	runErr := runTestMain(t,
 		cfgFilePath,
-		"",             // inputPath (from config)
-		flagOutputPath, // outputPath (from flag)
-		"yaml",         // outputFmt (default, not in config or flag)
-		[]string{"x-flag-keep"}, // excludesSlice from flag (will be overridden by config's excludes)
+		"",                        // inputPath (from config)
+		flagOutputPath,            // outputPath (from flag)
+		"yaml",                    // outputFmt (default, not in config or flag)
+		[]string{"x-flag-keep"},   // excludesSlice from flag (will be overridden by config's excludes)
 		[]string{"/api/v1/users"}, // pathsSlice (from flag)
-		false,          // rmEnable (config rm-exts.enable = true will take precedence)
+		false,                     // rmEnable (config rm-exts.enable = true will take precedence)
 	)
 	assert.NoError(t, runErr, "RunE returned an error")
 
@@ -338,13 +337,13 @@ func TestRunE_RemoveExtensions(t *testing.T) {
 	assert.NoError(t, err)
 
 	runErr := runTestMain(t,
-		"",             // configFile
-		inputFilePath,  // inputPath
-		outputFilePath, // outputPath
-		"yaml",         // outputFmt
+		"",                    // configFile
+		inputFilePath,         // inputPath
+		outputFilePath,        // outputPath
+		"yaml",                // outputFmt
 		[]string{"x-go-type"}, // Changed excludesSlice to x-go-type
-		nil,            // pathsSlice
-		true,           // rmEnable is explicitly true from flag
+		nil,                   // pathsSlice
+		true,                  // rmEnable is explicitly true from flag
 	)
 	assert.NoError(t, runErr, "RunE returned an error")
 
@@ -365,13 +364,13 @@ func TestRunE_SplitPath(t *testing.T) {
 	assert.NoError(t, err)
 
 	runErr := runTestMain(t,
-		"",             // configFile
-		inputFilePath,  // inputPath
-		outputFilePath, // outputPath
-		"yaml",         // outputFmt
-		nil,            // excludesSlice
+		"",                         // configFile
+		inputFilePath,              // inputPath
+		outputFilePath,             // outputPath
+		"yaml",                     // outputFmt
+		nil,                        // excludesSlice
 		[]string{"/api/v1/orders"}, // pathsSlice
-		false,          // rmEnable
+		false,                      // rmEnable
 	)
 	assert.NoError(t, runErr, "RunE returned an error")
 
@@ -469,13 +468,13 @@ func TestRunE_ErrorSplitPathNotFound(t *testing.T) {
 	assert.NoError(t, err)
 
 	runErr := runTestMain(t,
-		"",             // configFile
-		inputFilePath,  // inputPath
-		outputFilePath, // outputPath
-		"yaml",         // outputFmt
-		nil,            // excludesSlice
+		"",                                  // configFile
+		inputFilePath,                       // inputPath
+		outputFilePath,                      // outputPath
+		"yaml",                              // outputFmt
+		nil,                                 // excludesSlice
 		[]string{"/api/v1/nonexistentpath"}, // pathsSlice with a path not in the doc
-		false,          // rmEnable
+		false,                               // rmEnable
 	)
 	assert.Error(t, runErr)
 	assert.Contains(t, runErr.Error(), "Error splitting OpenAPI document by path") // This is generic, check for utils.ErrOpenAPIPathNotFound if possible

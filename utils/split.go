@@ -75,17 +75,15 @@ func collectPrameterComponents(splitDoc *openapi3.T, doc *openapi3.T, param *ope
 				return
 			}
 			sourceComponent := doc.Components.Parameters[key]
-			if sourceComponent == nil { return }
+			if sourceComponent == nil {
+				return
+			}
 
 			if splitDoc.Components.Parameters == nil {
 				splitDoc.Components.Parameters = make(openapi3.ParametersMap)
 			}
 			splitDoc.Components.Parameters[key] = sourceComponent
 			collectPrameterComponents(splitDoc, doc, sourceComponent, param.Ref) // Recurse with source component and original ref
-		case "schemas":
-			sourceComponent := doc.Components.Schemas[key]
-			if sourceComponent == nil { return }
-			collectSchemaComponents(splitDoc, doc, sourceComponent) // Call new signature
 		default:
 		}
 		return
@@ -122,17 +120,15 @@ func collectRequestBodyComponents(splitDoc *openapi3.T, doc *openapi3.T, request
 				return
 			}
 			sourceComponent := doc.Components.RequestBodies[key]
-			if sourceComponent == nil { return }
+			if sourceComponent == nil {
+				return
+			}
 
 			if splitDoc.Components.RequestBodies == nil {
 				splitDoc.Components.RequestBodies = make(openapi3.RequestBodies)
 			}
 			splitDoc.Components.RequestBodies[key] = sourceComponent
 			collectRequestBodyComponents(splitDoc, doc, sourceComponent, requestBody.Ref)
-		case "schemas":
-			sourceComponent := doc.Components.Schemas[key]
-			if sourceComponent == nil { return }
-			collectSchemaComponents(splitDoc, doc, sourceComponent)
 		default:
 		}
 		return
@@ -171,17 +167,15 @@ func collectResponseComponents(splitDoc *openapi3.T, doc *openapi3.T, response *
 				return
 			}
 			sourceComponent := doc.Components.Responses[key]
-			if sourceComponent == nil { return }
+			if sourceComponent == nil {
+				return
+			}
 
 			if splitDoc.Components.Responses == nil {
 				splitDoc.Components.Responses = make(openapi3.ResponseBodies)
 			}
 			splitDoc.Components.Responses[key] = sourceComponent
 			collectResponseComponents(splitDoc, doc, sourceComponent, response.Ref)
-		case "schemas":
-			sourceComponent := doc.Components.Schemas[key]
-			if sourceComponent == nil { return }
-			collectSchemaComponents(splitDoc, doc, sourceComponent)
 		default:
 		}
 		return
@@ -234,7 +228,7 @@ func collectSchemaComponents(splitDoc *openapi3.T, doc *openapi3.T, schemaRefToP
 				splitDoc.Components.Schemas = make(openapi3.Schemas)
 			}
 			splitDoc.Components.Schemas[refKey] = sourceComponent // Add the component (SchemaRef) from source doc
-			currentSchemaValue = sourceComponent.Value // Process the value of this newly added component
+			currentSchemaValue = sourceComponent.Value            // Process the value of this newly added component
 		}
 	} else {
 		// It's an inline schema or a pre-resolved schema value (e.g. from a previous step)
