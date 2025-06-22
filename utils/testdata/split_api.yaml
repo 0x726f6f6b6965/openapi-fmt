@@ -8,6 +8,7 @@ paths:
       summary: Endpoint with various component references
       parameters:
         - $ref: '#/components/parameters/CommonParam'
+        - $ref: '#/components/parameters/NestedParam' # Reusing CommonParam for demonstration
         - name: inlineQueryParam
           in: query
           schema:
@@ -49,6 +50,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AllOfSchema'
+        '204':
+          $ref: '#/components/responses/NestedResponse'
 
 components:
   schemas:
@@ -112,7 +115,12 @@ components:
       in: header
       schema:
         type: string
-
+    NestedParam:
+      name: NestedParam
+      in: query
+      description: An unused query parameter
+      required: false
+      $ref: '#/components/parameters/CommonParam' # Reusing CommonParam for demonstration
   requestBodies:
     ComplexBody:
       description: A complex request body
@@ -145,12 +153,26 @@ components:
               message:
                 type: string
                 example: "An error occurred"
+              abc:
+                $ref: '#/components/schemas/ReferencedInResponse'
     UnusedResponse:
       description: An unused response
       content:
         application/json:
           schema:
             type: string
+    NestedResponse:
+      description: A response with a nested schema
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/BaseSchema'
+              - type: object
+                properties:
+                  nestedProperty:
+                    type: string
+                    example: "Nested Property Value"
 
   headers:
     RateLimit:

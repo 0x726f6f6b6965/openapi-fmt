@@ -169,7 +169,7 @@ func removeParameterExtensions(parameter *openapi3.ParameterRef, exclude map[str
 	removeExt(parameter.Value.Extensions, exclude)
 
 	// Remove extensions from schema
-	removeSchemaExtensions(parameter.Value.Schema, exclude)
+	// removeSchemaExtensions(parameter.Value.Schema, exclude)
 }
 func removeRequestBodyExtensions(requestBody *openapi3.RequestBodyRef, exclude map[string]struct{}) {
 	if requestBody == nil {

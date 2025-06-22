@@ -145,7 +145,8 @@ func RunE(cmd *cobra.Command, args []string) error {
 		utils.RemoveExtensions(source, keep)
 	}
 	var data []byte
-	if outputFmt == "yaml" {
+	switch outputFmt {
+	case "yaml":
 		out, err := source.MarshalYAML()
 		if err != nil {
 			return fmt.Errorf("Error marshalling OpenAPI document: %w", err)
@@ -154,7 +155,7 @@ func RunE(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("Error marshalling OpenAPI document to YAML: %w", err)
 		}
-	} else if outputFmt == "json" {
+	case "json":
 		data, err = source.MarshalJSON()
 		if err != nil {
 			return fmt.Errorf("Error marshalling OpenAPI document to JSON: %w", err)

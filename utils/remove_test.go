@@ -1,8 +1,6 @@
 package utils_test
 
 import (
-	"os"
-
 	"github.com/0x726f6f6b6965/openapi-fmt/utils"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/stretchr/testify/assert"
@@ -51,11 +49,7 @@ paths:
 
 func (suite *UtilsTestSuite) TestRemoveExtensionsWithExcludes() {
 	loader := openapi3.NewLoader()
-	yamlFile, err := os.ReadFile("../testdata/remove_extensions_api.yaml") // Use the new dedicated file
-	if err != nil {
-		suite.T().Fatalf("Failed to read testdata/remove_extensions_api.yaml: %v", err)
-	}
-	doc, err := loader.LoadFromData(yamlFile)
+	doc, err := loader.LoadFromData(removeExtensionsFile)
 	if err != nil {
 		suite.T().Fatal(err)
 	}

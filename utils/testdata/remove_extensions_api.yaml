@@ -1,0 +1,101 @@
+openapi: 3.0.0
+info:
+  title: Test API for RemoveExtensions
+  version: 1.0.0
+x-global-ext: "should be removed"
+paths:
+  /test:
+    get:
+      parameters:
+        - name: x-param-ext
+          in: header
+          schema:
+            type: string
+            x-param-schema-ext: "ParamSchemaExtension" # Should be removed
+        - $ref: '#/components/parameters/SizeParam'
+      summary: Test endpoint
+      x-go-type: "TestType" # This should be kept if excluded
+      x-42c-sample: "SampleValue" # This should be removed
+      x-another-to-remove: "RemoveMe"
+      responses:
+        '200':
+          headers:
+            X-Header-Ext:
+              $ref: '#/components/headers/X-Header-Ext'
+          description: Successful response
+          x-resp-ext: "ResponseExtension" # Should be removed
+          content:
+            application/json:           
+              schema:
+                type: object
+                x-schema-ext: "SchemaExtension" # Should be removed
+                properties:
+                  message:
+                    type: string
+                    x-prop-ext: "PropertyExtension" # Should be removed
+                    x-go-type: "MessageType" # Should be kept if x-go-type is excluded
+    post:
+      requestBody:
+        $ref: '#/components/requestBodies/ComplexBody'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestType' # Should be kept if x-go-type is excluded
+                x-go-type: "TestType" # Should be kept if x-go-type is excluded
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/TestType' # Should be kept if x-go-type is excluded
+                  - type: object
+                    properties:
+                      additionalInfo:
+                        type: string
+                        x-go-type: "AdditionalInfoType" # Should be kept if x-go-type is excluded
+components:
+  parameters:
+    SizeParam:
+      name: size
+      in: query
+      description: Size parameter
+      required: false
+      schema:
+        type: integer
+        x-param-ext: "SizeParamExtension" # Should be removed
+  headers:
+    X-Header-Ext:
+      description: Header extension
+      schema:
+        type: string
+        x-header-ext: "HeaderExtension" # Should be removed
+  schemas:
+    TestType:
+      type: object
+      x-comp-schema-ext: "ComponentSchemaExtension" # Should be removed
+      properties:
+        id:
+          type: string
+          x-go-type: "IDType" # Should be kept if x-go-type is excluded
+    OtherSchema:
+      type: object
+      x-other-schema-ext: "toBeRemoved"
+  requestBodies:
+    ComplexBody:
+      description: A complex request body
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TestType' # Should be kept if x-go-type is excluded
+            x-comp-schema-ext: "ComplexBodySchemaExtension" # Should be removed
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      x-security-ext: "SecurityExtension" # Should be removed

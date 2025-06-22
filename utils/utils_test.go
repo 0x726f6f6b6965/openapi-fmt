@@ -11,6 +11,12 @@ import (
 //go:embed testdata/api.yaml
 var file []byte
 
+//go:embed testdata/remove_extensions_api.yaml
+var removeExtensionsFile []byte
+
+//go:embed testdata/split_api.yaml
+var splitFile []byte
+
 type UtilsTestSuite struct {
 	suite.Suite
 	Doc *openapi3.T

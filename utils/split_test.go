@@ -1,7 +1,6 @@
 package utils_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/0x726f6f6b6965/openapi-fmt/utils"
@@ -97,14 +96,9 @@ func TestExtractReferenceName(t *testing.T) {
 // It's assumed to be used by tests within the UtilsTestSuite.
 func (suite *UtilsTestSuite) loadTestAPIDoc() *openapi3.T {
 	loader := openapi3.NewLoader()
-	// Corrected path to testdata from utils package
-	yamlFile, err := os.ReadFile("../testdata/api.yaml")
+	doc, err := loader.LoadFromData(splitFile)
 	if err != nil {
-		suite.T().Fatalf("Failed to read testdata/api.yaml: %v", err)
-	}
-	doc, err := loader.LoadFromData(yamlFile)
-	if err != nil {
-		suite.T().Fatalf("Failed to load data from testdata/api.yaml: %v", err)
+		suite.T().Fatalf("Failed to load data from testdata/split_api.yaml: %v", err)
 	}
 	return doc
 }
