@@ -1,6 +1,6 @@
 module github.com/0x726f6f6b6965/openapi-fmt
 
-go 1.24.3
+go 1.24.4
 
 require (
 	github.com/getkin/kin-openapi v0.132.0

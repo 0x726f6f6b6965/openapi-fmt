@@ -6,8 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Add new parameters in the split operation in the configuration.
+- Added new parameters in the split operation in the configuration.
   - Can split the OpenAPI file by the path with method.
+- Added Bazel.
 
 ### Changed
 - TBD
