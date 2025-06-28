@@ -5,7 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- TBD
+
+- Added new parameters in the split operation in the configuration.
+  - Can split the OpenAPI file by the path with method.
+- Added Bazel.
 
 ### Changed
 - TBD

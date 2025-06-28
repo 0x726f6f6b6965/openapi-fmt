@@ -1,0 +1,35 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "utils",
+    srcs = [
+        "error.go",
+        "remove.go",
+        "split.go",
+    ],
+    importpath = "github.com/0x726f6f6b6965/openapi-fmt/utils",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_getkin_kin_openapi//openapi3"],
+)
+
+go_test(
+    name = "utils_test",
+    srcs = [
+        "remove_test.go",
+        "split_test.go",
+        "utils_test.go",
+    ],
+    data = glob(["testdata/**"]),
+    embedsrcs = [
+        "testdata/api.yaml",
+        "testdata/remove_extensions_api.yaml",
+        "testdata/split_api.yaml",
+    ],
+    deps = [
+        ":utils",
+        "@com_github_getkin_kin_openapi//openapi3",
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//suite",
+        "@in_gopkg_yaml_v3//:yaml_v3",
+    ],
+)

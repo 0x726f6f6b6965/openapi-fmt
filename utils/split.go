@@ -6,7 +6,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
-func SplitByPath(doc *openapi3.T, targets map[string]struct{}) (*openapi3.T, error) {
+func SplitByPath(doc *openapi3.T, targets map[string][]string) (*openapi3.T, error) {
 	if doc == nil {
 		return nil, ErrOpenAPINotFound
 	}
@@ -34,11 +34,26 @@ func SplitByPath(doc *openapi3.T, targets map[string]struct{}) (*openapi3.T, err
 		if _, ok := targets[path]; !ok {
 			continue
 		}
+		op := make(map[string]bool)
+		for _, method := range targets[path] {
+			if method == "" {
+				continue
+			}
+			// Normalize method to uppercase
+			op[strings.ToUpper(method)] = true
+		}
+		var allOperations bool
+		if len(op) == 0 {
+			allOperations = true // If no specific methods are provided, include all operations
+		}
 		splitDoc.Paths.Set(path, pathItem)
 		// Collect components that are referenced in the path item
-		for _, operation := range pathItem.Operations() {
+		for method, operation := range pathItem.Operations() {
 			if operation == nil {
 				continue
+			}
+			if !allOperations && len(op) > 0 && !op[method] {
+				continue // Skip operations not in the specified methods
 			}
 			// Collect parameters
 			for _, param := range operation.Parameters {

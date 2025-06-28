@@ -1,0 +1,10 @@
+# This file tells Bazel what to build.
+#
+# The part that loads the "gazelle" rule and declares the "gazelle" target
+# are hand-written. Gazelle can be run with:
+#
+#     bazel run //:gazelle
+
+load("@gazelle//:def.bzl", "gazelle")
+
+gazelle(name = "gazelle")
