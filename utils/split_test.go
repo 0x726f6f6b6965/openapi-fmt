@@ -105,8 +105,8 @@ func (suite *UtilsTestSuite) loadTestAPIDoc() *openapi3.T {
 
 func (suite *UtilsTestSuite) TestSplitByPath_ComplexReferences() {
 	doc := suite.loadTestAPIDoc()
-	output, err := utils.SplitByPath(doc, map[string]struct{}{
-		"/complex-path": {},
+	output, err := utils.SplitByPath(doc, map[string][]string{
+		"/complex-path": {"get"},
 	})
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), output)
@@ -139,7 +139,7 @@ func (suite *UtilsTestSuite) TestSplitByPath_ComplexReferences() {
 
 func (suite *UtilsTestSuite) TestSplitByPath_PathExistsNoNewComponents() {
 	doc := suite.loadTestAPIDoc()
-	output, err := utils.SplitByPath(doc, map[string]struct{}{
+	output, err := utils.SplitByPath(doc, map[string][]string{
 		"/simple-path": {},
 	})
 	assert.NoError(suite.T(), err)
@@ -165,7 +165,7 @@ func (suite *UtilsTestSuite) TestSplitByPath_PathExistsNoNewComponents() {
 
 func (suite *UtilsTestSuite) TestSplitByPath_AllOfSchema() {
 	doc := suite.loadTestAPIDoc()
-	output, err := utils.SplitByPath(doc, map[string]struct{}{
+	output, err := utils.SplitByPath(doc, map[string][]string{
 		"/path-with-allof-schema": {},
 	})
 	assert.NoError(suite.T(), err)
@@ -182,7 +182,7 @@ func (suite *UtilsTestSuite) TestSplitByPath_AllOfSchema() {
 
 func (suite *UtilsTestSuite) TestSplitByPathNotFound() {
 	doc := suite.loadTestAPIDoc() // Use helper to load doc
-	_, err := utils.SplitByPath(doc, map[string]struct{}{
+	_, err := utils.SplitByPath(doc, map[string][]string{
 		"/api/v1/nonexistent": {}})
 	assert.Error(suite.T(), err, "Expected an error when splitting by a non-existent path")
 	assert.ErrorIs(suite.T(), err, utils.ErrOpenAPIPathNotFound, "Expected ErrOpenAPIPathNotFound")
@@ -190,14 +190,14 @@ func (suite *UtilsTestSuite) TestSplitByPathNotFound() {
 
 func (suite *UtilsTestSuite) TestSplitByPathEmpty() {
 	doc := suite.loadTestAPIDoc() // Use helper to load doc
-	_, err := utils.SplitByPath(doc, map[string]struct{}{})
+	_, err := utils.SplitByPath(doc, map[string][]string{})
 	assert.Error(suite.T(), err, "Expected an error when splitting by an empty path map")
 	assert.ErrorIs(suite.T(), err, utils.ErrOpenAPIPathNotFound, "Expected ErrOpenAPIPathNotFound")
 }
 
 func (suite *UtilsTestSuite) TestSplitByPathNilDocument() {
 	// No need to load full doc for this one, suite.Doc is not used.
-	_, err := utils.SplitByPath(nil, map[string]struct{}{"/any/path": {}})
+	_, err := utils.SplitByPath(nil, map[string][]string{"/any/path": {}})
 	assert.Error(suite.T(), err, "Expected an error when splitting with a nil document")
 	assert.ErrorIs(suite.T(), err, utils.ErrOpenAPINotFound, "Expected ErrOpenAPINotFound")
 }

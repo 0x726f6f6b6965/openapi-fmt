@@ -32,9 +32,13 @@ rm-exts:
     - ".log"
 sp:
   enable: false
-  paths:
-    - "input/data/sp1"
-    - "input/data/sp2"
+  endpoints:
+    - path: "input/data/sp1"
+      methods: 
+        - "GET"
+    - path: "input/data/sp2"
+      methods: 
+        - "POST"
 `
 	validConfigPath := filepath.Join(tmpDir, "valid_config.yaml")
 	if err := os.WriteFile(validConfigPath, []byte(validYAML), 0644); err != nil {
@@ -56,11 +60,20 @@ sp:
 		},
 		Sp: config.SpConfig{
 			Enable: false,
-			Paths:  []string{"input/data/sp1", "input/data/sp2"},
+			Endpoints: []config.Endpoint{
+				{
+					Path:    "input/data/sp1",
+					Methods: []string{"GET"},
+				},
+				{
+					Path:    "input/data/sp2",
+					Methods: []string{"POST"},
+				},
+			},
 		},
 	}
 
-	cfg, err := config.LoadConfig(validConfigPath)
+	cfg, err := config.LoadConfig[config.Config](validConfigPath)
 	if err != nil {
 		t.Errorf("Expected no error for valid config, got %v", err)
 	}
@@ -69,7 +82,7 @@ sp:
 	}
 
 	// Test case 2: File not found
-	_, err = config.LoadConfig(filepath.Join(tmpDir, "non_existent_config.yaml"))
+	_, err = config.LoadConfig[config.Config](filepath.Join(tmpDir, "non_existent_config.yaml"))
 	if err == nil {
 		t.Error("Expected error for non-existent file, got nil")
 	}
@@ -88,7 +101,7 @@ output
 		t.Fatalf("Failed to write invalid config file: %v", err)
 	}
 
-	_, err = config.LoadConfig(invalidConfigPath)
+	_, err = config.LoadConfig[config.Config](invalidConfigPath)
 	if err == nil {
 		t.Error("Expected error for invalid YAML format, got nil")
 	}
