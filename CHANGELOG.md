@@ -6,24 +6,35 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Added new parameters in the split operation in the configuration.
-  - Can split the OpenAPI file by the path with method.
-- Added Bazel.
+- TBD
 
 ### Changed
+
 - TBD
 
 ### Deprecated
+
 - TBD
 
 ### Reomved
+
 - TBD
 
 ### Fixed
+
 - TBD
 
 ### Security
+
 - TBD
+
+## [v1.0.1] - 2025-06-28
+
+### Added
+
+- Added new parameters in the split operation in the configuration.
+  - Can split the OpenAPI file by the path with method.
+- Added Bazel.
 
 ### [v1.0.0]
 
