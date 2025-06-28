@@ -1,0 +1,31 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+
+go_library(
+    name = "o-fmt_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/0x726f6f6b6965/openapi-fmt/cmd/o-fmt",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//config",
+        "//utils",
+        "@com_github_getkin_kin_openapi//openapi3",
+        "@com_github_spf13_cobra//:cobra",
+        "@in_gopkg_yaml_v3//:yaml_v3",
+    ],
+)
+
+go_binary(
+    name = "o-fmt",
+    embed = [":o-fmt_lib"],
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "o-fmt_test",
+    srcs = ["main_test.go"],
+    embed = [":o-fmt_lib"],
+    deps = [
+        "@com_github_stretchr_testify//assert",
+        "@in_gopkg_yaml_v3//:yaml_v3",
+    ],
+)

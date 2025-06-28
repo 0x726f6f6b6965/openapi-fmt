@@ -60,10 +60,13 @@ func main() {
 
 func RunE(cmd *cobra.Command, args []string) error {
 
-	var cfg *config.Config
+	var (
+		cfg       *config.Config
+		endpoints []config.Endpoint
+	)
 	if configFile != "" {
 		var err error
-		cfg, err = config.LoadConfig(configFile)
+		cfg, err = config.LoadConfig[config.Config](configFile)
 		if err != nil {
 			return fmt.Errorf("Error loading config file '%s': %w", configFile, err)
 		}
@@ -83,8 +86,8 @@ func RunE(cmd *cobra.Command, args []string) error {
 				excludesSlice = cfg.RmExts.Excludes
 			}
 		}
-		if cfg.Sp.Enable && len(cfg.Sp.Paths) > 0 {
-			pathsSlice = cfg.Sp.Paths
+		if cfg.Sp.Enable && len(cfg.Sp.Endpoints) > 0 {
+			endpoints = cfg.Sp.Endpoints
 		}
 	}
 
@@ -116,13 +119,20 @@ func RunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error loading OpenAPI document from '%s': %w", inputPath, err)
 	}
 
-	if len(pathsSlice) > 0 {
-		targets := map[string]struct{}{}
+	if len(endpoints) == 0 && len(pathsSlice) > 0 {
+		// If no endpoints are specified, we will split by paths
 		for _, path := range pathsSlice {
-			if path == "" {
+			endpoints = append(endpoints, config.Endpoint{Path: path})
+		}
+	}
+
+	if len(endpoints) > 0 {
+		targets := map[string][]string{}
+		for _, endpoint := range endpoints {
+			if endpoint.Path == "" {
 				continue
 			}
-			targets[path] = struct{}{}
+			targets[endpoint.Path] = endpoint.Methods
 		}
 
 		source, err = utils.SplitByPath(doc, targets)
