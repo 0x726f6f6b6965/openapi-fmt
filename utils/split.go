@@ -53,7 +53,8 @@ func SplitByPath(doc *openapi3.T, targets map[string][]string) (*openapi3.T, err
 				continue
 			}
 			if !allOperations && len(op) > 0 && !op[method] {
-				continue // Skip operations not in the specified methods
+				splitDoc.Paths.Value(path).SetOperation(method, nil) // Remove operation if not in the specified methods
+				continue                                             // Skip operations not in the specified methods
 			}
 			// Collect parameters
 			for _, param := range operation.Parameters {

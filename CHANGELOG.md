@@ -22,7 +22,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- TBD
+- Fixed splitting of OpenAPI files by method paths.
 
 ### Security
 
